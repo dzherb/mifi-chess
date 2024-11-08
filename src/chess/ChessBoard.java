@@ -26,27 +26,9 @@ public class ChessBoard {
     }
 
     public boolean moveToPosition(int startRow, int startColumn, int endRow, int endColumn) {
-        if (!(isPositionWithinBoard(startRow, startColumn) && isPositionWithinBoard(endRow, endColumn))) {
+        if (!movePiece(startRow, startColumn, endRow, endColumn)) {
             return false;
         }
-
-        if (isCellEmpty(startRow, startColumn)) {
-            return false;
-        }
-
-        ChessPiece checkPiece = getPiece(startRow, startColumn);
-
-        if (!currentPlayerColor.equals(checkPiece.getColor())) {
-            return false;
-        }
-
-        if (!checkPiece.canMoveToPosition(startRow, startColumn, endRow, endColumn)) {
-            return false;
-        }
-
-        placePiece(endRow, endColumn, checkPiece);
-        removePiece(startRow, startColumn);
-        checkPiece.moveHappened();
         togglePlayerColor();
         return true;
     }
@@ -78,27 +60,56 @@ public class ChessBoard {
         printPlayer(1, PlayerColor.WHITE);
     }
 
-    private boolean isPositionWithinBoard(int row, int column) {
+    private boolean isPositionWithin(int row, int column) {
         return row >= 0 && row <= 7 && column >= 0 && column <= 7;
     }
 
-    public void placePiece(int row, int column, ChessPiece chessPiece) {
+    private void placePiece(int row, int column, ChessPiece chessPiece) {
         board[row][column] = chessPiece;
         if (chessPiece.getBoard() == null) {
             chessPiece.setBoard(this);
         }
     }
 
-    public void removePiece(int row, int column) {
+    private boolean movePiece(int startRow, int startColumn, int endRow, int endColumn) {
+        if (!(isPositionWithin(startRow, startColumn) && isPositionWithin(endRow, endColumn))) {
+            return false;
+        }
+
+        if (isCellEmpty(startRow, startColumn)) {
+            return false;
+        }
+
+        ChessPiece chessPiece = getPiece(startRow, startColumn);
+
+        if (!currentPlayerColor.equals(chessPiece.getColor())) {
+            return false;
+        }
+
+        if (!chessPiece.canMoveToPosition(startRow, startColumn, endRow, endColumn)) {
+            return false;
+        }
+
+        placePiece(endRow, endColumn, chessPiece);
+        removePiece(startRow, startColumn);
+
+        chessPiece.moveHappened();
+        return true;
+    }
+
+    private void removePiece(int row, int column) {
         board[row][column] = null;
     }
 
     public ChessPiece getPiece(int row, int column) {
-        return board[row][column];
+        if (isPositionWithin(row, column)) {
+            return board[row][column];
+        }
+        return null;
     }
 
     public boolean isCellEmpty(int row, int column) {
-        return board[row][column] == null;
+        return getPiece(row, column) == null;
     }
 
     public int height() {
@@ -110,7 +121,35 @@ public class ChessBoard {
     }
 
     public boolean castling0() {
-        return false;
+        int row = getCurrentPlayerColor().equals(PlayerColor.WHITE) ? 0 : 7;
+
+        Pawn pawn;
+        King king;
+        try {
+            pawn = (Pawn) getPiece(row, 0);
+            king = (King) getPiece(row, 4);
+        } catch (ClassCastException e) {
+            return false;
+        }
+        if (pawn == null || king == null) {
+            return false;
+        }
+        if (!(pawn.isAtInitialPosition() && king.isAtInitialPosition())) {
+            return false;
+        }
+
+        if (king.isUnderAttack(row, 2)) {
+            return false;
+        }
+
+        for (int i = 1; i < 4; i++) {
+            if (!isCellEmpty(0, i)) {
+                return false;
+            }
+        }
+        movePiece(row, 0, row, 3);
+        movePiece(row, 4, row, 2);
+        return true;
     }
 
     public boolean castling7() {
@@ -128,14 +167,9 @@ public class ChessBoard {
         board.placePiece(0, 5, new Bishop(PlayerColor.WHITE));
         board.placePiece(0, 6, new Horse(PlayerColor.WHITE));
         board.placePiece(0, 7, new Rook(PlayerColor.WHITE));
-        board.placePiece(1, 0, new Pawn(PlayerColor.WHITE));
-        board.placePiece(1, 1, new Pawn(PlayerColor.WHITE));
-        board.placePiece(1, 2, new Pawn(PlayerColor.WHITE));
-        board.placePiece(1, 3, new Pawn(PlayerColor.WHITE));
-        board.placePiece(1, 4, new Pawn(PlayerColor.WHITE));
-        board.placePiece(1, 5, new Pawn(PlayerColor.WHITE));
-        board.placePiece(1, 6, new Pawn(PlayerColor.WHITE));
-        board.placePiece(1, 7, new Pawn(PlayerColor.WHITE));
+        for (int i = 0; i < board.width(); i++) {
+            board.placePiece(1, i, new Rook(PlayerColor.WHITE));
+        }
 
         board.placePiece(7, 0, new Rook(PlayerColor.BLACK));
         board.placePiece(7, 1, new Horse(PlayerColor.BLACK));
@@ -145,14 +179,9 @@ public class ChessBoard {
         board.placePiece(7, 5, new Bishop(PlayerColor.BLACK));
         board.placePiece(7, 6, new Horse(PlayerColor.BLACK));
         board.placePiece(7, 7, new Rook(PlayerColor.BLACK));
-        board.placePiece(6, 0, new Pawn(PlayerColor.BLACK));
-        board.placePiece(6, 1, new Pawn(PlayerColor.BLACK));
-        board.placePiece(6, 2, new Pawn(PlayerColor.BLACK));
-        board.placePiece(6, 3, new Pawn(PlayerColor.BLACK));
-        board.placePiece(6, 4, new Pawn(PlayerColor.BLACK));
-        board.placePiece(6, 5, new Pawn(PlayerColor.BLACK));
-        board.placePiece(6, 6, new Pawn(PlayerColor.BLACK));
-        board.placePiece(6, 7, new Pawn(PlayerColor.BLACK));
+        for (int i = 0; i < board.width(); i++) {
+            board.placePiece(6, i, new Rook(PlayerColor.BLACK));
+        }
 
         return board;
     }

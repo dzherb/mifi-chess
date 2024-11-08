@@ -14,20 +14,22 @@ public class Pawn extends ChessPiece {
             return false;
         }
 
-        if (startColumn != endColumn) {
+        if (endRow > startRow && getColor().equals(ChessBoard.PlayerColor.BLACK) || endRow < startRow && getColor().equals(ChessBoard.PlayerColor.WHITE)) {
+            // todo можно ли упростить условие?
+            // Не даем двигаться "назад"
             return false;
         }
 
-        final int minStep = 1;
-        final int maxStep = getIsAtInitialPosition() ? 2 : 1;
+        int rowDiff = Math.abs(startRow - endRow);
+        int colDiff = Math.abs(startColumn - endColumn);
 
-        int diff = startRow - endRow;
-        if (getColor().equals(ChessBoard.PlayerColor.WHITE)) {
-            diff = -diff;
+        if (!board.isCellEmpty(endRow, endColumn)) {
+            // Возможность атаковать по-диагонали
+            return colDiff == 1 && rowDiff == 1;
         }
-        // todo атака по-диагонали еще
-        // todo проверять фигуры на пути, если есть (но не на финальной точке по-диагонали), то false
-        return diff >= minStep && diff <= maxStep && board.isCellEmpty(endRow, endColumn);
+
+        int maxStep = isAtInitialPosition() ? 2 : 1;
+        return colDiff == 0 && rowDiff >= 1 && rowDiff <= maxStep;
     }
 
     @Override

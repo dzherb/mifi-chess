@@ -15,10 +15,7 @@ public class King extends ChessPiece {
         }
         int rowDiff = Math.abs(endRow - startRow);
         int colDiff = Math.abs(endColumn - startColumn);
-        if (rowDiff == 0 && colDiff == 0) {
-            return false;
-        }
-        return rowDiff == 1 || colDiff == 1;
+        return rowDiff >= 0 && rowDiff <= 1 && colDiff >= 0 && colDiff <= 1;
     }
 
     @Override

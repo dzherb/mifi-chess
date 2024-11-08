@@ -3,13 +3,17 @@ package chess;
 public abstract class ChessPiece {
     private final ChessBoard.PlayerColor color;
     protected ChessBoard board;
-    private boolean isAtInitialPosition = true;
+    private boolean check = true;
 
     public ChessPiece(ChessBoard.PlayerColor color) {
         this.color = color;
     }
 
     public boolean canMoveToPosition(int startRow, int startColumn, int endRow, int endColumn) {
+        if (startRow == endRow && startColumn == endColumn) {
+            return false;
+        }
+
         return board.isCellEmpty(endRow, endColumn) || !isSameSideFigure(board.getPiece(endRow, endColumn));
     }
 
@@ -19,12 +23,12 @@ public abstract class ChessPiece {
         return color;
     }
 
-    public boolean getIsAtInitialPosition() {
-        return isAtInitialPosition;
+    public boolean isAtInitialPosition() {
+        return check;
     }
 
     public void moveHappened() {
-        isAtInitialPosition = false;
+        check = false;
     }
 
     public boolean isSameSideFigure(ChessPiece chessPiece) {
