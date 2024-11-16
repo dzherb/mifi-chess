@@ -19,7 +19,7 @@ public class Main {
         board.printBoard();
 
         while (true) {
-            System.out.print(">>> ");
+            System.out.print(board.getCurrentPlayerColor() + " turn >>> ");
             String command = scanner.nextLine();
             String firstWord = command.split(" ")[0];
             switch (firstWord) {
@@ -34,6 +34,7 @@ public class Main {
                         System.out.println("Рокировка удалась");
                     } else {
                         System.out.println("Рокировка не удалась");
+                        continue;
                     }
                     break;
                 case "castling7":
@@ -41,6 +42,7 @@ public class Main {
                         System.out.println("Рокировка удалась");
                     } else {
                         System.out.println("Рокировка не удалась");
+                        continue;
                     }
                     break;
                 case "move":
@@ -63,7 +65,6 @@ public class Main {
                         continue;
                     }
                     catch (Exception e) {
-                        e.printStackTrace();
                         System.out.println("Вы что-то ввели не так, попробуйте ещё раз");
                         continue;
                     }

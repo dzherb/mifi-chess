@@ -15,21 +15,20 @@ public class Pawn extends ChessPiece {
         }
 
         if (endRow > startRow && getColor().equals(ChessBoard.PlayerColor.BLACK) || endRow < startRow && getColor().equals(ChessBoard.PlayerColor.WHITE)) {
-            // todo можно ли упростить условие?
-            // Не даем двигаться "назад"
+            // don't allow to move backwards
             return false;
         }
 
         int rowDiff = Math.abs(startRow - endRow);
         int colDiff = Math.abs(startColumn - endColumn);
 
-        if (!board.isCellEmpty(endRow, endColumn)) {
-            // Возможность атаковать по-диагонали
-            return colDiff == 1 && rowDiff == 1;
+        if (colDiff != 0) {
+            // can attack diagonally
+            return colDiff == 1 && rowDiff == 1 && !board.isCellEmpty(endRow, endColumn);
         }
 
         int maxStep = isAtInitialPosition() ? 2 : 1;
-        return colDiff == 0 && rowDiff >= 1 && rowDiff <= maxStep;
+        return rowDiff >= 1 && rowDiff <= maxStep;
     }
 
     @Override

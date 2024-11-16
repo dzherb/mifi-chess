@@ -14,8 +14,11 @@ public class Queen extends ChessPiece {
             return false;
         }
 
-        return false;
-        // todo проверять фигуры на пути, если есть (но не на финальной точке), то false
+        boolean canMoveHorizontally = startRow == endRow && board.isRowSectionEmpty(startRow, startColumn, endColumn);
+        boolean canMoveVertically = startColumn == endColumn && board.isColumnSectionEmpty(startColumn, startRow, endRow);
+        boolean canMoveDiagonally = board.isDiagonalEmpty(startRow, startColumn, endRow, endColumn);
+
+        return canMoveHorizontally || canMoveVertically || canMoveDiagonally;
     }
 
     @Override

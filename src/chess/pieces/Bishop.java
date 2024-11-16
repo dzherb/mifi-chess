@@ -14,10 +14,7 @@ public class Bishop extends ChessPiece {
             return false;
         }
 
-        int rowDiff = Math.abs(endRow - startRow);
-        int columnDiff = Math.abs(endColumn - startColumn);
-        return rowDiff == columnDiff && rowDiff != 0;
-        // todo проверять фигуры на пути, если есть (но не на финальной точке), то false
+        return board.isDiagonalEmpty(startRow, startColumn, endRow, endColumn);
     }
 
     @Override

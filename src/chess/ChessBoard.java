@@ -26,9 +26,23 @@ public class ChessBoard {
     }
 
     public boolean moveToPosition(int startRow, int startColumn, int endRow, int endColumn) {
-        if (!movePiece(startRow, startColumn, endRow, endColumn)) {
+        if (!(isPositionWithin(startRow, startColumn) && isPositionWithin(endRow, endColumn))) {
             return false;
         }
+        if (isCellEmpty(startRow, startColumn)) {
+            return false;
+        }
+
+        ChessPiece chessPiece = getPiece(startRow, startColumn);
+
+        if (!currentPlayerColor.equals(chessPiece.getColor())) {
+            return false;
+        }
+        if (!chessPiece.canMoveToPosition(startRow, startColumn, endRow, endColumn)) {
+            return false;
+        }
+
+        movePiece(startRow, startColumn, endRow, endColumn);
         togglePlayerColor();
         return true;
     }
@@ -42,7 +56,7 @@ public class ChessBoard {
     }
 
     public void printBoard() {  //print board in console
-        System.out.println("\nTurn " + currentPlayerColor + "\n");
+        System.out.println();
         printPlayer(2, PlayerColor.BLACK);
         System.out.println("\t0\t1\t2\t3\t4\t5\t6\t7");
         for (int i = 7; i > -1; i--) {
@@ -71,34 +85,15 @@ public class ChessBoard {
         }
     }
 
-    private boolean movePiece(int startRow, int startColumn, int endRow, int endColumn) {
-        if (!(isPositionWithin(startRow, startColumn) && isPositionWithin(endRow, endColumn))) {
-            return false;
-        }
-
-        if (isCellEmpty(startRow, startColumn)) {
-            return false;
-        }
-
-        ChessPiece chessPiece = getPiece(startRow, startColumn);
-
-        if (!currentPlayerColor.equals(chessPiece.getColor())) {
-            return false;
-        }
-
-        if (!chessPiece.canMoveToPosition(startRow, startColumn, endRow, endColumn)) {
-            return false;
-        }
-
-        placePiece(endRow, endColumn, chessPiece);
-        removePiece(startRow, startColumn);
-
-        chessPiece.moveHappened();
-        return true;
-    }
-
     private void removePiece(int row, int column) {
         board[row][column] = null;
+    }
+
+    private void movePiece(int startRow, int startColumn, int endRow, int endColumn) {
+        ChessPiece chessPiece = getPiece(startRow, startColumn);
+        placePiece(endRow, endColumn, chessPiece);
+        removePiece(startRow, startColumn);
+        chessPiece.moveHappened();
     }
 
     public ChessPiece getPiece(int row, int column) {
@@ -120,67 +115,115 @@ public class ChessBoard {
         return board[0].length;
     }
 
-    public boolean castling0() {
-        int row = getCurrentPlayerColor().equals(PlayerColor.WHITE) ? 0 : 7;
-
-        Pawn pawn;
-        King king;
-        try {
-            pawn = (Pawn) getPiece(row, 0);
-            king = (King) getPiece(row, 4);
-        } catch (ClassCastException e) {
-            return false;
+    public boolean isRowSectionEmpty(int row, int startColumn, int endColumn) {
+        if (endColumn < startColumn) {
+            int temp = endColumn;
+            endColumn = startColumn;
+            startColumn = temp;
         }
-        if (pawn == null || king == null) {
-            return false;
-        }
-        if (!(pawn.isAtInitialPosition() && king.isAtInitialPosition())) {
-            return false;
-        }
-
-        if (king.isUnderAttack(row, 2)) {
-            return false;
-        }
-
-        for (int i = 1; i < 4; i++) {
-            if (!isCellEmpty(0, i)) {
+        for (int i = startColumn + 1; i < endColumn; i++) {
+            if (!isCellEmpty(row, i)) {
                 return false;
             }
         }
-        movePiece(row, 0, row, 3);
-        movePiece(row, 4, row, 2);
         return true;
     }
 
+    public boolean isColumnSectionEmpty(int column, int startRow, int endRow) {
+        if (endRow < startRow) {
+            int temp = endRow;
+            endRow = startRow;
+            startRow = temp;
+        }
+        for (int i = startRow + 1; i < endRow; i++) {
+            if (!isCellEmpty(i, column)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isDiagonalEmpty(int startRow, int startColumn, int endRow, int endColumn) {
+        int rowDiff = Math.abs(endRow - startRow);
+        int columnDiff = Math.abs(endColumn - startColumn);
+        if (rowDiff != columnDiff) {
+            // invalid diagonal
+            return false;
+        }
+        if (endRow < startRow) {
+            startRow = endRow;
+            startColumn = endColumn;
+        }
+        for (int i = 1; i < rowDiff; i++) {
+            if (!isCellEmpty(startRow + i, startColumn + i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean castling(int rookColumn) {
+        final int row = getCurrentPlayerColor().equals(PlayerColor.WHITE) ? 0 : 7;
+        final int kingColumn = 4;
+
+        Rook rook;
+        King king;
+        try {
+            rook = (Rook) getPiece(row, rookColumn);
+            king = (King) getPiece(row, kingColumn);
+        } catch (ClassCastException e) {
+            return false;
+        }
+
+        if (rook == null || king == null) {
+            return false;
+        }
+        if (!(rook.isAtInitialPosition() && king.isAtInitialPosition())) {
+            return false;
+        }
+
+        final int kingFinalColumn = rookColumn > kingColumn ? 6 : 2;
+        final int rookFinalColumn = rookColumn > kingColumn ? 5 : 3;
+
+        if (king.isUnderAttack(row, kingFinalColumn)) {
+            return false;
+        }
+
+        if (!isRowSectionEmpty(row, rookColumn, kingColumn)) {
+            return false;
+        }
+
+        movePiece(row, rookColumn, row, rookFinalColumn);
+        movePiece(row, kingColumn, row, kingFinalColumn);
+        togglePlayerColor();
+        return true;
+    }
+
+    public boolean castling0() {
+        return castling(0);
+    }
+
     public boolean castling7() {
-        return false;
+        return castling(7);
     }
 
     public static ChessBoard buildBoard() {
         ChessBoard board = new ChessBoard(PlayerColor.WHITE);
 
-        board.placePiece(0, 0, new Rook(PlayerColor.WHITE));
-        board.placePiece(0, 1, new Horse(PlayerColor.WHITE));
-        board.placePiece(0, 2, new Bishop(PlayerColor.WHITE));
-        board.placePiece(0, 3, new Queen(PlayerColor.WHITE));
-        board.placePiece(0, 4, new King(PlayerColor.WHITE));
-        board.placePiece(0, 5, new Bishop(PlayerColor.WHITE));
-        board.placePiece(0, 6, new Horse(PlayerColor.WHITE));
-        board.placePiece(0, 7, new Rook(PlayerColor.WHITE));
-        for (int i = 0; i < board.width(); i++) {
-            board.placePiece(1, i, new Rook(PlayerColor.WHITE));
-        }
-
-        board.placePiece(7, 0, new Rook(PlayerColor.BLACK));
-        board.placePiece(7, 1, new Horse(PlayerColor.BLACK));
-        board.placePiece(7, 2, new Bishop(PlayerColor.BLACK));
-        board.placePiece(7, 3, new Queen(PlayerColor.BLACK));
-        board.placePiece(7, 4, new King(PlayerColor.BLACK));
-        board.placePiece(7, 5, new Bishop(PlayerColor.BLACK));
-        board.placePiece(7, 6, new Horse(PlayerColor.BLACK));
-        board.placePiece(7, 7, new Rook(PlayerColor.BLACK));
-        for (int i = 0; i < board.width(); i++) {
-            board.placePiece(6, i, new Rook(PlayerColor.BLACK));
+        for (PlayerColor player: PlayerColor.values()) {
+            int row = player.equals(PlayerColor.WHITE) ? 0 : 7;
+            board.placePiece(row, 0, new Rook(player));
+            board.placePiece(row, 1, new Horse(player));
+            board.placePiece(row, 2, new Bishop(player));
+            board.placePiece(row, 3, new Queen(player));
+            board.placePiece(row, 4, new King(player));
+            board.placePiece(row, 5, new Bishop(player));
+            board.placePiece(row, 6, new Horse(player));
+            board.placePiece(row, 7, new Rook(player));
+            row = player.equals(PlayerColor.WHITE) ? 1 : 6;
+            for (int i = 0; i < board.width(); i++) {
+                board.placePiece(row, i, new Pawn(player));
+            }
         }
 
         return board;

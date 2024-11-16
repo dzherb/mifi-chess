@@ -13,14 +13,9 @@ public class Rook extends ChessPiece {
         if (!super.canMoveToPosition(startRow, startColumn, endRow, endColumn)) {
             return false;
         }
-
-        if (startRow == endRow && startColumn == endColumn) {
-            return false;
-        }
-
-        else return startRow == endRow || startColumn == endColumn;
-        // todo проверять фигуры на пути, если есть (но не на финальной точке), то false
-
+        boolean canMoveHorizontally = startRow == endRow && board.isRowSectionEmpty(startRow, startColumn, endColumn);
+        boolean canMoveVertically = startColumn == endColumn && board.isColumnSectionEmpty(startColumn, startRow, endRow);
+        return canMoveHorizontally || canMoveVertically;
     }
 
     @Override
