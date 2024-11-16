@@ -22,9 +22,13 @@ public class Pawn extends ChessPiece {
         int rowDiff = Math.abs(startRow - endRow);
         int colDiff = Math.abs(startColumn - endColumn);
 
-        if (colDiff != 0) {
+        if (!board.isCellEmpty(endRow, endColumn)) {
             // can attack diagonally
-            return colDiff == 1 && rowDiff == 1 && !board.isCellEmpty(endRow, endColumn);
+            return colDiff == 1 && rowDiff == 1;
+        }
+
+        if (!board.isColumnSectionEmpty(startColumn, startRow, endRow)) {
+            return false;
         }
 
         int maxStep = isAtInitialPosition() ? 2 : 1;
